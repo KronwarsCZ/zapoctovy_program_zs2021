@@ -5,4 +5,4 @@ Dokumentace v souboru **Dokumentace_zapoctak.docx**
 
 Program spustíte pomocí `python3 main.py` (Linux) nebo `py -3 main.py` (Windows)
 
-Vstupní soubor **musí** být ve stejné složce jako soubor main.py a musí odpovídat formátu v dokumentaci.
+Vstupní soubor `graf_toku.txt` **musí** být ve stejné složce jako soubor main.py a musí odpovídat formátu v dokumentaci.
