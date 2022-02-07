@@ -1,6 +1,6 @@
 from timeit import default_timer as timer
 
-def EdmondKarpuv(zacatek, konec, sousedi, kapacity):
+def EdmondsKarpuv(zacatek, konec, sousedi, kapacity):
 	'''
 	Edmond-Karpův algoritmus
 	Řeší hledání největšího toku v orientovaném ohodnoceném grafu
@@ -110,7 +110,7 @@ def Goldberguv(graf, zacatek, konec, sousedi):
 		vyska_pred = vyska[vrchol]
 		vyprazdni(vrchol)				#odstranim prebytek vrcholu
 
-		if vyska[vrchol] > vyska_pred:							#vyska se zmenila - je potreba zacit prochazet seznam od zacatku
+		if vyska[vrchol] > vyska_pred:							#vyska vrcholu se zmenila - je potreba zacit prochazet seznam od zacatku
 			seznam_vrcholu.insert(0, seznam_vrcholu.pop(i))
 			i = 0
 		i += 1													#jinak pokracuji dal
@@ -179,7 +179,7 @@ while True:
 	vstup = int(input("Vyberte číslo algoritmu: "))
 	if vstup == 1:
 		kapacity, sousedi, zacatek, konec = nactiGraf(nazev_souboru)
-		print("Maximální tok:", EdmondKarpuv(zacatek, konec, sousedi, kapacity))
+		print("Maximální tok:", EdmondsKarpuv(zacatek, konec, sousedi, kapacity))
 	elif vstup == 2:
 		kapacity, sousedi, zacatek, konec = nactiGraf(nazev_souboru)
 		print("Maximální tok: ", Goldberguv(kapacity, zacatek, konec, sousedi))
@@ -187,7 +187,7 @@ while True:
 		kapacity, sousedi, zacatek, konec = nactiGraf(nazev_souboru)
 		
 		zacatek1 = timer()
-		vysledek1 = EdmondKarpuv(zacatek, konec, sousedi, kapacity)
+		vysledek1 = EdmondsKarpuv(zacatek, konec, sousedi, kapacity)
 		konec1 = timer()
 
 		zacatek2 = timer()
@@ -195,6 +195,7 @@ while True:
 		konec2 = timer()
 
 		if vysledek1 == vysledek2:
+			print(vysledek1)
 			print("Doba běhu 1: ", (konec1 - zacatek1))
 			print("Doba běhu 2: ", (konec2 - zacatek2))
 		else:
