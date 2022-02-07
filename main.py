@@ -53,57 +53,67 @@ def EdmondKarpuv(zacatek, konec, sousedi, kapacity):
 
 def Goldberguv(graf, zacatek, konec, sousedi):
 	def zvedni_vrchol(a):
+		'''
+		Funkce na zvedani vrcholu
+		'''
 		for b in sousedi[a]:
 			if graf[a][b] - pouzita_kapacita[a][b] > 0:
 				mensi = min(vyska[a], vyska[b])
 				vyska[a] = mensi + 1
 
 	def vyprazdni(a):
+		'''
+		Funkce na odstaneni a premisteni prebytku
+		'''
 		while prebytek[a] > 0:
 			if vyzkousen[a] < N:
 				b = vyzkousen[a]
-				if vyska[a] > vyska[b] and graf[a][b] - pouzita_kapacita[a][b] > 0:
-					zvednout(a, b)
+				if vyska[a] > vyska[b] and graf[a][b] - pouzita_kapacita[a][b] > 0:		#existuje soused, kteremu muzu premistit prebytek, tak to zkusim
+					posli = min(prebytek[a], graf[a][b] - pouzita_kapacita[a][b])
+		
+					pouzita_kapacita[a][b] += posli
+					prebytek[a] -= posli
+		
+					pouzita_kapacita[b][a] -= posli
+					prebytek[b] += posli
 				else:
 					vyzkousen[a] += 1
-			else:
+			else:																		#pokud takovy soused neni, zvedam vrchol
 				zvedni_vrchol(a)
 				vyzkousen[a] = 0
-	
-	def zvednout(a, b):
-		posli = min(prebytek[a], graf[a][b] - pouzita_kapacita[a][b])
 		
-		pouzita_kapacita[a][b] += posli
-		prebytek[a] -= posli
-		
-		pouzita_kapacita[b][a] -= posli
-		prebytek[b] += posli
 	
 	N = len(graf)
-	pouzita_kapacita = [[0] * N for _ in range(N)]
+	pouzita_kapacita = [[0] * N for _ in range(N)]					#2D pole na ulozeni uz pouzite kapacity u kazdeho vrcholu od vsech ostatnich
 
-	vyska = [0] * N						#zacatek ve vysce N, ostatni ve vysce 0
-	vyska[zacatek] = N
+	vyska = [0] * N						#pole na ulozeni vysek jednotlivych vrcholu
+	vyska[zacatek] = N					#zacatek ve vysce N, ostatni ve vysce 0
 
 	prebytek = [0] * N					#vytvorime pocatecni vlnu - vsechny hrany ze zacatku na maximum, ostatni na 0 
-	prebytek[zacatek] = float('inf')
+	prebytek[zacatek] = float('inf')	#jednoduchy zpusob zapsani maxima
 	for vrchol in sousedi[zacatek]:
-		zvednout(zacatek, vrchol)
+		posli = min(prebytek[zacatek], graf[zacatek][vrchol] - pouzita_kapacita[zacatek][vrchol])		#zkousim premistit prebytek na vsechny vrcholy spojene s "zacatecnim" vrcholem
+		
+		pouzita_kapacita[zacatek][vrchol] += posli
+		prebytek[zacatek] -= posli
+		
+		pouzita_kapacita[vrchol][zacatek] -= posli
+		prebytek[vrchol] += posli
 
-	vyzkousen = [0] * N
-	seznam_vrcholu   = [i for i in range(N) if i != zacatek and i != konec]
+	vyzkousen = [0] * N				#pole, kde si ukladam kolik vrcholu jsem uz vyzkousel pro kazdy vrchol I na indexu I
+	seznam_vrcholu   = [i for i in range(N) if i != zacatek and i != konec]			#seznam vrcholu, ktere musime prochazet - zacatek a konec neprochazime
 	
 
 	i = 0
-	while i < N-2:
+	while i < N-2:						#prochazime seznam vrcholu
 		vrchol = seznam_vrcholu[i]
 		vyska_pred = vyska[vrchol]
-		vyprazdni(vrchol)
+		vyprazdni(vrchol)				#odstranim prebytek vrcholu
 
-		if vyska[vrchol] > vyska_pred:
+		if vyska[vrchol] > vyska_pred:							#vyska se zmenila - je potreba zacit prochazet seznam od zacatku
 			seznam_vrcholu.insert(0, seznam_vrcholu.pop(i))
 			i = 0
-		i += 1
+		i += 1													#jinak pokracuji dal
 
 	return -sum([pouzita_kapacita[konec][i] for i in range(N)])
 
