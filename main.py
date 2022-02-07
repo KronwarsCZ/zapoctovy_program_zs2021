@@ -1,43 +1,36 @@
-def BFS(zacatek, konec, sousedi, kapacity, odtoky):
-	'''
-	BFS algoritmus na procházení grafu přes vrcholy.
-	Hledám nejkratší cestu přes vrcholy, kterým ještě zbývá kapacita.
-	Každá cesta je využitá co nejvíc to jednotlivé části dovolí - tok přes cestu nikdy nemůže být víc něž nejmenší tok někde na cestě.
-	'''
-	fronta = [zacatek]							#algoritmus BFS na prochazeni grafu
-	cesty = {zacatek:[]}						#pro kazdy vrchol si ulozim jak se k nemu co nejkratsi cestou dostat
-
-	while len(fronta) > 0:
-		vrchol = fronta.pop(0)
-		for soused in sousedi[vrchol]:
-			#pro kazdeho souseda vrcholu
-			#pokud zbyva nejaky volny tok od vrcholu do souseda a zaroven jsem souseda jeste nenavstivil
-			if (kapacity[vrchol][soused] - odtoky[vrchol][soused]) > 0 and soused not in cesty:
-				#ulozim si, ze cesta do souseda vede pres vrchol
-				cesty[soused] = cesty[vrchol] + [(vrchol, soused)]
-				
-				#koncim az najdu konec, jinak pokracuji pridanim souseda do fronty
-				if soused == konec:
-						return cesty[soused]
-				else:
-					fronta.append(soused)
-	
-	return None
+from timeit import default_timer as timer
 
 def EdmondKarpuv(zacatek, konec, sousedi, kapacity):
 	'''
 	Edmond-Karpův algoritmus
 	Řeší hledání největšího toku v orientovaném ohodnoceném grafu
 	'''
-	if zacatek == konec:
-		print("Zacate a konec jsou stejne vrcholy!")
-		return -1
-	if zacatek < 0 or zacatek > len(sousedi):
-		print("Chyba v zadani pocatecniho bodu!")
-		return -1
-	if konec < 0 or konec > len(sousedi):
-		print("Chyba v zadani koncoveho bodu!")
-		return -1
+	
+	def BFS(zacatek, konec, sousedi, kapacity, odtoky):
+		'''
+		BFS algoritmus na procházení grafu přes vrcholy.
+		Hledám nejkratší cestu přes vrcholy, kterým ještě zbývá kapacita.
+		Každá cesta je využitá co nejvíc to jednotlivé části dovolí - tok přes cestu nikdy nemůže být víc něž nejmenší tok někde na cestě.
+		'''
+		fronta = [zacatek]							#algoritmus BFS na prochazeni grafu
+		cesty = {zacatek:[]}						#pro kazdy vrchol si ulozim jak se k nemu co nejkratsi cestou dostat
+
+		while len(fronta) > 0:
+			vrchol = fronta.pop(0)
+			for soused in sousedi[vrchol]:
+				#pro kazdeho souseda vrcholu
+				#pokud zbyva nejaky volny tok od vrcholu do souseda a zaroven jsem souseda jeste nenavstivil
+				if (kapacity[vrchol][soused] - odtoky[vrchol][soused]) > 0 and soused not in cesty:
+					#ulozim si, ze cesta do souseda vede pres vrchol
+					cesty[soused] = cesty[vrchol] + [(vrchol, soused)]
+					
+					#koncim az najdu konec, jinak pokracuji pridanim souseda do fronty
+					if soused == konec:
+							return cesty[soused]
+					else:
+						fronta.append(soused)
+		
+		return None
 
 	odtoky = [[0 for i in range(len(sousedi))] for j in range(len(sousedi))]
 	#vytvorim si pole poli o velikosti pocet vrcholu * pocet vrcholu, ve kterem si uchovavam pro kazdy vrchol kolik kam odtece do jinych vrcholu
@@ -58,6 +51,61 @@ def EdmondKarpuv(zacatek, konec, sousedi, kapacity):
 	
 	return sum(odtoky[zacatek][i] for i in range(len(sousedi)))
 
+def Goldberguv(graf, zacatek, konec, sousedi):
+	def zvedni_vrchol(a):
+		for b in sousedi[a]:
+			if graf[a][b] - pouzita_kapacita[a][b] > 0:
+				mensi = min(vyska[a], vyska[b])
+				vyska[a] = mensi + 1
+
+	def vyprazdni(a):
+		while prebytek[a] > 0:
+			if vyzkousen[a] < N:
+				b = vyzkousen[a]
+				if vyska[a] > vyska[b] and graf[a][b] - pouzita_kapacita[a][b] > 0:
+					zvednout(a, b)
+				else:
+					vyzkousen[a] += 1
+			else:
+				zvedni_vrchol(a)
+				vyzkousen[a] = 0
+	
+	def zvednout(a, b):
+		posli = min(prebytek[a], graf[a][b] - pouzita_kapacita[a][b])
+		
+		pouzita_kapacita[a][b] += posli
+		prebytek[a] -= posli
+		
+		pouzita_kapacita[b][a] -= posli
+		prebytek[b] += posli
+	
+	N = len(graf)
+	pouzita_kapacita = [[0] * N for _ in range(N)]
+
+	vyska = [0] * N						#zacatek ve vysce N, ostatni ve vysce 0
+	vyska[zacatek] = N
+
+	prebytek = [0] * N					#vytvorime pocatecni vlnu - vsechny hrany ze zacatku na maximum, ostatni na 0 
+	prebytek[zacatek] = float('inf')
+	for vrchol in sousedi[zacatek]:
+		zvednout(zacatek, vrchol)
+
+	vyzkousen = [0] * N
+	seznam_vrcholu   = [i for i in range(N) if i != zacatek and i != konec]
+	
+
+	i = 0
+	while i < N-2:
+		vrchol = seznam_vrcholu[i]
+		vyska_pred = vyska[vrchol]
+		vyprazdni(vrchol)
+
+		if vyska[vrchol] > vyska_pred:
+			seznam_vrcholu.insert(0, seznam_vrcholu.pop(i))
+			i = 0
+		i += 1
+
+	return -sum([pouzita_kapacita[konec][i] for i in range(N)])
 
 def nactiGraf(nazev_souboru):
 	'''
@@ -88,25 +136,29 @@ def nactiGraf(nazev_souboru):
 	ok = False
 	while ok != True:
 		try:
+
 			zacatek = int(input("Číslo počátečního bodu: "))
 			konec = int(input("Číslo koncového bodu: "))
-			ok = True
+			
+			if zacatek == konec:
+				print("Začátek a konec jsou stejné vrcholy!")
+			elif zacatek < 0 or zacatek >= len(sousedi):
+				print("Chyba v zadáni počátečního bodu!")
+			elif konec < 0 or konec >= len(sousedi):
+				print("Chyba v zadání koncového bodu!")
+			else:
+				ok = True
+
 		except:
 			ok = False
-			print("Chyba!")
+			print("Chyba v zadávání!")
 
 	return kapacity, sousedi, zacatek, konec
 
-def Goldberguv():
-	return "Neimplementováno"
-
-
-
-
-
 menu = {
 		1: "Edmond-Karpův algoritmus",
-		2: "Goldbergův algoritmus"
+		2: "Goldbergův algoritmus",
+		3: "Rozdíl v době běhu"
 	}
 while True:
 	for klic in menu.keys():
@@ -117,13 +169,26 @@ while True:
 	vstup = int(input("Vyberte číslo algoritmu: "))
 	if vstup == 1:
 		kapacity, sousedi, zacatek, konec = nactiGraf(nazev_souboru)
-		print("Maximální tok:",EdmondKarpuv(zacatek, konec, sousedi, kapacity))
+		print("Maximální tok:", EdmondKarpuv(zacatek, konec, sousedi, kapacity))
 	elif vstup == 2:
 		kapacity, sousedi, zacatek, konec = nactiGraf(nazev_souboru)
-		print(Goldberguv())
+		print("Maximální tok: ", Goldberguv(kapacity, zacatek, konec, sousedi))
+	elif vstup == 3:
+		kapacity, sousedi, zacatek, konec = nactiGraf(nazev_souboru)
+		
+		zacatek1 = timer()
+		vysledek1 = EdmondKarpuv(zacatek, konec, sousedi, kapacity)
+		konec1 = timer()
+
+		zacatek2 = timer()
+		vysledek2 = Goldberguv(kapacity, zacatek, konec, sousedi)
+		konec2 = timer()
+
+		if vysledek1 == vysledek2:
+			print("Doba běhu 1: ", (konec1 - zacatek1))
+			print("Doba běhu 2: ", (konec2 - zacatek2))
+		else:
+			print("Rozdílný výsledek v max toku !!!")
+
 	else:
 		print("Chybný vstup")
-
-	
-
-	
